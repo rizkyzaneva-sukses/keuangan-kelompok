@@ -35,7 +35,7 @@ interface TransactionListProps {
   onDeleteTransaction?: (txId: string) => void;
 }
 
-type AmountRangePreset = 'all' | 'under50k' | '50k-200k' | '200k-500k' | 'over500k' | 'custom';
+type AmountRangePreset = 'all' | 'custom';
 
 export const TransactionList: React.FC<TransactionListProps> = ({
   transactions,
@@ -70,18 +70,6 @@ export const TransactionList: React.FC<TransactionListProps> = ({
 
   // Determine min and max threshold based on preset or custom inputs
   const { minThreshold, maxThreshold } = useMemo(() => {
-    if (amountPreset === 'under50k') {
-      return { minThreshold: 0, maxThreshold: 50000 };
-    }
-    if (amountPreset === '50k-200k') {
-      return { minThreshold: 50000, maxThreshold: 200000 };
-    }
-    if (amountPreset === '200k-500k') {
-      return { minThreshold: 200000, maxThreshold: 500000 };
-    }
-    if (amountPreset === 'over500k') {
-      return { minThreshold: 500000, maxThreshold: Infinity };
-    }
     if (amountPreset === 'custom') {
       const min = customMinAmount ? parseInt(customMinAmount.replace(/[^0-9]/g, ''), 10) : 0;
       const max = customMaxAmount ? parseInt(customMaxAmount.replace(/[^0-9]/g, ''), 10) : Infinity;
@@ -403,54 +391,6 @@ export const TransactionList: React.FC<TransactionListProps> = ({
 
             <button
               type="button"
-              onClick={() => setAmountPreset('under50k')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                amountPreset === 'under50k'
-                  ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-              }`}
-            >
-              &lt; Rp 50rb
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setAmountPreset('50k-200k')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                amountPreset === '50k-200k'
-                  ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-              }`}
-            >
-              Rp 50rb - 200rb
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setAmountPreset('200k-500k')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                amountPreset === '200k-500k'
-                  ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-              }`}
-            >
-              Rp 200rb - 500rb
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setAmountPreset('over500k')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                amountPreset === 'over500k'
-                  ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-              }`}
-            >
-              &gt; Rp 500rb
-            </button>
-
-            <button
-              type="button"
               onClick={() => {
                 setAmountPreset('custom');
                 setShowAmountFilterPanel(!showAmountFilterPanel);
@@ -578,7 +518,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
 
               {amountPreset !== 'all' && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-cyan-50 dark:bg-cyan-950/60 border border-cyan-200 dark:border-cyan-800 text-cyan-800 dark:text-cyan-300 text-xs font-semibold">
-                  Rentang: {amountPreset === 'under50k' ? '< Rp 50rb' : amountPreset === '50k-200k' ? 'Rp 50rb - 200rb' : amountPreset === '200k-500k' ? 'Rp 200rb - 500rb' : amountPreset === 'over500k' ? '> Rp 500rb' : `${customMinAmount ? formatRupiah(parseInt(customMinAmount, 10)) : '0'} s/d ${customMaxAmount ? formatRupiah(parseInt(customMaxAmount, 10)) : '∞'}`}
+                  Rentang: {amountPreset === 'custom' ? `${customMinAmount ? formatRupiah(parseInt(customMinAmount, 10)) : '0'} s/d ${customMaxAmount ? formatRupiah(parseInt(customMaxAmount, 10)) : '∞'}` : ''}
                   <button
                     onClick={() => {
                       setAmountPreset('all');

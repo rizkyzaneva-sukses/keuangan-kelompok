@@ -278,6 +278,14 @@ export default function App() {
     loadPublicData();
   };
 
+  // FAB scroll to transaction form
+  const handleFABClick = () => {
+    const el = document.getElementById('transaction-form');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-['Plus_Jakarta_Sans',sans-serif] transition-colors duration-200">
       {/* Toast Notifications */}
@@ -411,6 +419,18 @@ export default function App() {
           </div>
         )}
       </main>
+
+      {/* Floating Action Button — Mobile Only, Admin Only, Active Group Only */}
+      {isAdmin && activeGroup && (
+        <button
+          onClick={handleFABClick}
+          className="md:hidden fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center cursor-pointer"
+          title="Input Transaksi"
+          aria-label="Input Transaksi"
+        >
+          <PlusCircle className="w-6 h-6" />
+        </button>
+      )}
 
       {/* Modals */}
       {/* 1. Public Password Unlock Modal (Password kelompok tanpa username) */}
