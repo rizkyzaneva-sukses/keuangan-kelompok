@@ -10,20 +10,28 @@ import {
   Lock,
   Sun,
   Moon,
+  Menu,
+  LayoutDashboard,
+  PlusCircle,
+  List,
 } from 'lucide-react';
 import { Group } from '../types.ts';
 import { useTheme } from '../context/ThemeContext.tsx';
+import { PageName } from './HamburgerMenu.tsx';
 
 interface NavbarProps {
   isAdmin: boolean;
   activeGroup?: Group | null;
   groups: Group[];
+  currentPage: PageName;
   onSelectGroup: (group: Group) => void;
+  onNavigate: (page: PageName) => void;
   onOpenAdminLogin: () => void;
   onLogoutAdmin: () => void;
   onOpenGroupManagement: () => void;
   onOpenShareModal: () => void;
   onChangePin: () => void;
+  onOpenHamburgerMenu: () => void;
   onLockPublicView?: () => void;
 }
 
@@ -31,48 +39,96 @@ export const Navbar: React.FC<NavbarProps> = ({
   isAdmin,
   activeGroup,
   groups,
+  currentPage,
   onSelectGroup,
+  onNavigate,
   onOpenAdminLogin,
   onLogoutAdmin,
   onOpenGroupManagement,
   onOpenShareModal,
   onChangePin,
+  onOpenHamburgerMenu,
   onLockPublicView,
 }) => {
   const { isDark, toggleTheme } = useTheme();
+
+  const navTabs: { page: PageName; label: string; icon: React.ReactNode; adminOnly?: boolean }[] = [
+    { page: 'beranda', label: 'Beranda', icon: <LayoutDashboard className="w-3.5 h-3.5" /> },
+    { page: 'input', label: 'Input', icon: <PlusCircle className="w-3.5 h-3.5" />, adminOnly: true },
+    { page: 'riwayat', label: 'Riwayat', icon: <List className="w-3.5 h-3.5" />, adminOnly: true },
+  ];
 
   return (
     <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 shadow-xs transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 gap-3">
-          {/* Logo and Brand */}
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-xs shrink-0">
-              <Wallet className="w-5 h-5" />
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-base sm:text-lg text-slate-900 dark:text-slate-100 tracking-tight truncate">
-                  Keuangan Kelompok
-                </span>
-                {isAdmin ? (
-                  <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                    <ShieldCheck className="w-3 h-3" />
-                    Admin Pengelola
-                  </span>
-                ) : (
-                  <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-50 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-                    <Eye className="w-3 h-3" />
-                    Mode Lihat Saja
-                  </span>
-                )}
+          {/* Left section: Hamburger (mobile) + Logo + Desktop Tabs */}
+          <div className="flex items-center gap-2 min-w-0">
+            {/* Hamburger button — mobile only */}
+            {isAdmin && activeGroup && (
+              <button
+                onClick={onOpenHamburgerMenu}
+                className="md:hidden p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+                aria-label="Buka menu navigasi"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+            )}
+
+            {/* Logo and Brand */}
+            <div
+              className="flex items-center gap-3 min-w-0 cursor-pointer"
+              onClick={() => onNavigate('beranda')}
+            >
+              <div className="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-xs shrink-0">
+                <Wallet className="w-5 h-5" />
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 truncate hidden md:block">
-                {isAdmin
-                  ? 'Anda memiliki hak input transaksi dan pengaturan kelompok'
-                  : 'Akses publik dengan kata sandi kelompok (tanpa login akun)'}
-              </p>
+              <div className="min-w-0 hidden sm:block">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-base sm:text-lg text-slate-900 dark:text-slate-100 tracking-tight truncate">
+                    Keuangan Kelompok
+                  </span>
+                  {isAdmin ? (
+                    <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                      <ShieldCheck className="w-3 h-3" />
+                      Admin Pengelola
+                    </span>
+                  ) : (
+                    <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-50 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                      <Eye className="w-3 h-3" />
+                      Mode Lihat Saja
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 truncate hidden md:block">
+                  {isAdmin
+                    ? 'Anda memiliki hak input transaksi dan pengaturan kelompok'
+                    : 'Akses publik dengan kata sandi kelompok (tanpa login akun)'}
+                </p>
+              </div>
             </div>
+
+            {/* Desktop Page Tabs */}
+            {isAdmin && activeGroup && (
+              <div className="hidden md:flex items-center gap-1 ml-4">
+                {navTabs
+                  .filter((tab) => !tab.adminOnly || isAdmin)
+                  .map((tab) => (
+                    <button
+                      key={tab.page}
+                      onClick={() => onNavigate(tab.page)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
+                        currentPage === tab.page
+                          ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      {tab.icon}
+                      <span>{tab.label}</span>
+                    </button>
+                  ))}
+              </div>
+            )}
           </div>
 
           {/* Group Switcher (in Admin mode) & Actions */}
@@ -128,9 +184,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               )}
             </button>
 
-            {/* Admin specific action buttons */}
+            {/* Admin specific action buttons — desktop only */}
             {isAdmin ? (
-              <div className="flex items-center gap-1.5">
+              <div className="hidden md:flex items-center gap-1.5">
                 <button
                   id="btn-manage-groups"
                   onClick={onOpenGroupManagement}
@@ -161,7 +217,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </button>
               </div>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="hidden md:flex items-center gap-2">
                 {activeGroup && onLockPublicView && (
                   <button
                     id="btn-lock-view"

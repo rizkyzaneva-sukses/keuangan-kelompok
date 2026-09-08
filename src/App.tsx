@@ -9,13 +9,16 @@ import {
   CheckCircle2,
   AlertCircle,
   ExternalLink,
+  ArrowLeft,
 } from 'lucide-react';
 import { Group, Transaction, GroupStats } from './types.ts';
 import { api, getStoredAdminPin, setStoredAdminPin, clearStoredAdminPin } from './services/api.ts';
 import { Navbar } from './components/Navbar.tsx';
+import { HamburgerMenu, PageName } from './components/HamburgerMenu.tsx';
 import { SaldoSummaryCards } from './components/SaldoSummaryCards.tsx';
 import { TransactionInputForm } from './components/TransactionInputForm.tsx';
 import { TransactionList } from './components/TransactionList.tsx';
+import { RecentTransactions } from './components/RecentTransactions.tsx';
 import { PublicPasswordModal } from './components/PublicPasswordModal.tsx';
 import { AdminPinModal } from './components/AdminPinModal.tsx';
 import { GroupManagementModal } from './components/GroupManagementModal.tsx';
@@ -30,6 +33,9 @@ export default function App() {
   const [loading, setLoading] = useState<boolean>(true);
   const [errorToast, setErrorToast] = useState<string | null>(null);
   const [successToast, setSuccessToast] = useState<string | null>(null);
+
+  // Page Navigation (admin only)
+  const [currentPage, setCurrentPage] = useState<PageName>('beranda');
 
   // Groups and Data
   const [groups, setGroups] = useState<Group[]>([]);
@@ -48,6 +54,9 @@ export default function App() {
   const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
   const [lightboxImage, setLightboxImage] = useState<{ url: string; title: string } | null>(null);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+
+  // Hamburger menu state
+  const [isHamburgerOpen, setIsHamburgerOpen] = useState<boolean>(false);
 
   const showToast = (message: string, isError = false) => {
     if (isError) {
@@ -160,6 +169,7 @@ export default function App() {
     setActiveGroup(null);
     setTransactions([]);
     setIsUnlockedForMember(false);
+    setCurrentPage('beranda');
     showToast('Anda telah keluar dari Mode Pengelola.');
     loadPublicData();
   };
@@ -273,17 +283,10 @@ export default function App() {
     setIsUnlockedForMember(false);
     setTransactions([]);
     setPublicStats(null);
+    setCurrentPage('beranda');
     // Remove query param cleanly
     window.history.pushState({}, document.title, window.location.pathname);
     loadPublicData();
-  };
-
-  // FAB scroll to transaction form
-  const handleFABClick = () => {
-    const el = document.getElementById('transaction-form');
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
   };
 
   return (
@@ -302,16 +305,34 @@ export default function App() {
         </div>
       )}
 
+      {/* Hamburger Menu Drawer */}
+      <HamburgerMenu
+        isOpen={isHamburgerOpen}
+        onClose={() => setIsHamburgerOpen(false)}
+        isAdmin={isAdmin}
+        currentPage={currentPage}
+        onNavigate={setCurrentPage}
+        onOpenAdminLogin={() => {
+          setIsChangingPin(false);
+          setIsAdminLoginOpen(true);
+        }}
+        onLogoutAdmin={handleAdminLogout}
+        onOpenGroupManagement={() => setIsGroupManagementOpen(true)}
+        onOpenShareModal={() => setIsShareModalOpen(true)}
+      />
+
       {/* Navigation Bar */}
       <Navbar
         isAdmin={isAdmin}
         activeGroup={activeGroup}
         groups={groups}
+        currentPage={currentPage}
         onSelectGroup={(g) => {
           setActiveGroup(g);
           // sync query param
           window.history.pushState({}, document.title, `?group=${g.id}`);
         }}
+        onNavigate={setCurrentPage}
         onOpenAdminLogin={() => {
           setIsChangingPin(false);
           setIsAdminLoginOpen(true);
@@ -323,6 +344,7 @@ export default function App() {
           setIsChangingPin(true);
           setIsAdminLoginOpen(true);
         }}
+        onOpenHamburgerMenu={() => setIsHamburgerOpen(true)}
         onLockPublicView={isUnlockedForMember ? handleLockPublicView : undefined}
       />
 
@@ -367,33 +389,101 @@ export default function App() {
               </div>
             )}
 
-            {/* Saldo Summary Cards */}
-            <SaldoSummaryCards
-              saldo={currentStats.saldo}
-              totalMasuk={currentStats.totalMasuk}
-              totalKeluar={currentStats.totalKeluar}
-              transactionCount={currentStats.transactionCount}
-              groupName={activeGroup.name}
-            />
+            {/* ============================== */}
+            {/* ADMIN: Conditional Page Views   */}
+            {/* ============================== */}
+            {isAdmin ? (
+              currentPage === 'beranda' ? (
+                /* --- BERANDA (Dashboard) --- */
+                <div className="space-y-6">
+                  <SaldoSummaryCards
+                    saldo={currentStats.saldo}
+                    totalMasuk={currentStats.totalMasuk}
+                    totalKeluar={currentStats.totalKeluar}
+                    transactionCount={currentStats.transactionCount}
+                    groupName={activeGroup.name}
+                  />
 
-            {/* Admin Input Form (Yang input saya saja) */}
-            {isAdmin && (
-              <TransactionInputForm
-                groupId={activeGroup.id}
-                groupName={activeGroup.name}
-                onAddTransaction={handleAddTransaction}
-              />
+                  {/* Recent Transactions Preview */}
+                  <RecentTransactions
+                    transactions={activeTransactions}
+                    onNavigate={setCurrentPage}
+                  />
+
+                  {/* Quick Action Buttons */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <button
+                      onClick={() => setCurrentPage('input')}
+                      className="flex items-center justify-center gap-2.5 px-5 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl shadow-xs transition-colors cursor-pointer"
+                    >
+                      <PlusCircle className="w-5 h-5" />
+                      <span className="text-sm font-bold">Input Transaksi</span>
+                    </button>
+                    <button
+                      onClick={() => setCurrentPage('riwayat')}
+                      className="flex items-center justify-center gap-2.5 px-5 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-2xl shadow-xs transition-colors cursor-pointer"
+                    >
+                      <ExternalLink className="w-5 h-5" />
+                      <span className="text-sm font-bold">Lihat Riwayat</span>
+                    </button>
+                  </div>
+                </div>
+              ) : currentPage === 'input' ? (
+                /* --- INPUT TRANSAKSI --- */
+                <div className="space-y-4">
+                  <button
+                    onClick={() => setCurrentPage('beranda')}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl transition-colors cursor-pointer"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>Kembali ke Beranda</span>
+                  </button>
+                  <TransactionInputForm
+                    groupId={activeGroup.id}
+                    groupName={activeGroup.name}
+                    onAddTransaction={handleAddTransaction}
+                  />
+                </div>
+              ) : currentPage === 'riwayat' ? (
+                /* --- RIWAYAT TRANSAKSI --- */
+                <div className="space-y-4">
+                  <button
+                    onClick={() => setCurrentPage('beranda')}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl transition-colors cursor-pointer"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>Kembali ke Beranda</span>
+                  </button>
+                  <TransactionList
+                    transactions={activeTransactions}
+                    isAdmin={isAdmin}
+                    groupName={activeGroup.name}
+                    onViewImage={(url, title) => setLightboxImage({ url, title })}
+                    onEditTransaction={(tx) => setEditingTransaction(tx)}
+                    onDeleteTransaction={handleDeleteTransaction}
+                  />
+                </div>
+              ) : null
+            ) : (
+              /* ============================== */
+              /* PUBLIC / MEMBER: View-Only       */
+              /* ============================== */
+              <div className="space-y-6">
+                <SaldoSummaryCards
+                  saldo={currentStats.saldo}
+                  totalMasuk={currentStats.totalMasuk}
+                  totalKeluar={currentStats.totalKeluar}
+                  transactionCount={currentStats.transactionCount}
+                  groupName={activeGroup.name}
+                />
+                <TransactionList
+                  transactions={activeTransactions}
+                  isAdmin={isAdmin}
+                  groupName={activeGroup.name}
+                  onViewImage={(url, title) => setLightboxImage({ url, title })}
+                />
+              </div>
             )}
-
-            {/* Transaction Ledger List */}
-            <TransactionList
-              transactions={activeTransactions}
-              isAdmin={isAdmin}
-              groupName={activeGroup.name}
-              onViewImage={(url, title) => setLightboxImage({ url, title })}
-              onEditTransaction={(tx) => setEditingTransaction(tx)}
-              onDeleteTransaction={handleDeleteTransaction}
-            />
           </div>
         ) : (
           /* Empty or No active group in Admin mode */
@@ -419,18 +509,6 @@ export default function App() {
           </div>
         )}
       </main>
-
-      {/* Floating Action Button — Mobile Only, Admin Only, Active Group Only */}
-      {isAdmin && activeGroup && (
-        <button
-          onClick={handleFABClick}
-          className="md:hidden fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center cursor-pointer"
-          title="Input Transaksi"
-          aria-label="Input Transaksi"
-        >
-          <PlusCircle className="w-6 h-6" />
-        </button>
-      )}
 
       {/* Modals */}
       {/* 1. Public Password Unlock Modal (Password kelompok tanpa username) */}
