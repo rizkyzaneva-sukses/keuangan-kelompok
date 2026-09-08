@@ -1,0 +1,7 @@
+{
+  "name": "Keuangan Kelompok",
+  "description": "Aplikasi pencatatan kas keuangan kelompok dengan saldo terpisah, input praktis tanggal, keterangan, nominal, dan bukti gambar, serta link publik berpengaman password untuk anggota.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+

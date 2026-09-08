@@ -1,0 +1,91 @@
+{
+  "adminPin": "123456",
+  "groups": [
+    {
+      "id": "kel-rt-05",
+      "name": "Kas RT 05 / RW 02",
+      "password": "kasrt",
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "kel-futsal",
+      "name": "Kas Tim Futsal Juara",
+      "password": "futsal2026",
+      "createdAt": "2026-02-01T00:00:00.000Z"
+    }
+  ],
+  "transactions": [
+    {
+      "id": "tx-1",
+      "groupId": "kel-rt-05",
+      "date": "2026-09-01",
+      "description": "Iuran Warga Blok A & B",
+      "amount": 450000,
+      "category": "Iuran Wajib / Rutin",
+      "createdAt": "2026-09-01T08:00:00.000Z"
+    },
+    {
+      "id": "tx-2",
+      "groupId": "kel-rt-05",
+      "date": "2026-09-03",
+      "description": "Beli Lampu Penerangan Jalan & Kabel",
+      "amount": -185000,
+      "category": "Peralatan & Perlengkapan",
+      "createdAt": "2026-09-03T10:30:00.000Z"
+    },
+    {
+      "id": "tx-3",
+      "groupId": "kel-rt-05",
+      "date": "2026-09-06",
+      "description": "Sumbangan Donatur Kegiatan Kerja Bakti",
+      "amount": 200000,
+      "category": "Sumbangan / Donasi",
+      "createdAt": "2026-09-06T14:15:00.000Z"
+    },
+    {
+      "id": "tx-rt-4",
+      "groupId": "kel-rt-05",
+      "date": "2026-09-07",
+      "description": "Konsumsi Snack & Kopi Kerja Bakti",
+      "amount": -75000,
+      "category": "Konsumsi & Makanan",
+      "createdAt": "2026-09-07T11:00:00.000Z"
+    },
+    {
+      "id": "tx-rt-5",
+      "groupId": "kel-rt-05",
+      "date": "2026-09-08",
+      "description": "Beli Sapu Lidi & Kantong Sampah",
+      "amount": -35000,
+      "category": "Kebersihan & Lingkungan",
+      "createdAt": "2026-09-08T09:00:00.000Z"
+    },
+    {
+      "id": "tx-4",
+      "groupId": "kel-futsal",
+      "date": "2026-09-02",
+      "description": "Uang Kas Masuk dari 10 Pemain",
+      "amount": 250000,
+      "category": "Iuran Wajib / Rutin",
+      "createdAt": "2026-09-02T19:00:00.000Z"
+    },
+    {
+      "id": "tx-5",
+      "groupId": "kel-futsal",
+      "date": "2026-09-05",
+      "description": "Sewa Lapangan 2 Jam",
+      "amount": -200000,
+      "category": "Sewa Tempat / Lapangan",
+      "createdAt": "2026-09-05T21:00:00.000Z"
+    },
+    {
+      "id": "tx-fut-6",
+      "groupId": "kel-futsal",
+      "date": "2026-09-06",
+      "description": "Beli Air Mineral Dus & Pisang",
+      "amount": -45000,
+      "category": "Konsumsi & Makanan",
+      "createdAt": "2026-09-06T18:00:00.000Z"
+    }
+  ]
+}
