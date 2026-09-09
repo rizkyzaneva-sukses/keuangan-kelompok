@@ -49,9 +49,7 @@ export const TransactionInputForm: React.FC<TransactionInputFormProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isFormExpanded, setIsFormExpanded] = useState<boolean>(
-    typeof window !== 'undefined' ? window.innerWidth >= 768 : true
-  );
+  const [isFormExpanded, setIsFormExpanded] = useState<boolean>(true);
 
   // Auto-suggest category if user hasn't explicitly set one or when description changes
   useEffect(() => {
