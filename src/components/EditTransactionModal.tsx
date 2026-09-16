@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   X,
   Calendar,
@@ -51,7 +51,23 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
   const [rawAmount, setRawAmount] = useState(String(Math.abs(transaction.amount)));
   const [imageUrl, setImageUrl] = useState<string | undefined>(transaction.imageUrl);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
+
+    // Reset form state whenever a different transaction is opened.
+    // Without this, opening tx B right after tx A shows tx A's stale values.
+    useEffect(() => {
+      if (!isOpen || !transaction) return;
+      setDate(transaction.date);
+      setDescription(transaction.description);
+      setCategory(
+        transaction.category || autoDetectCategory(transaction.description, transaction.amount > 0)
+      );
+      setIsNegative(transaction.amount < 0);
+      setRawAmount(String(Math.abs(transaction.amount)));
+      setImageUrl(transaction.imageUrl);
+      setError(null);
+      setLoading(false);
+    }, [isOpen, transaction?.id]);
 
   const parsedAmount = rawAmount ? parseInt(rawAmount.replace(/[^0-9]/g, ''), 10) : 0;
   const finalAmount = isNegative ? -Math.abs(parsedAmount) : Math.abs(parsedAmount);

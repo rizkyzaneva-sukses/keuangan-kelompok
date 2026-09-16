@@ -139,14 +139,31 @@ export const api = {
     }
   },
 
-  async addTransaction(payload: {
-    groupId: string;
-    date: string;
-    description: string;
-    amount: number;
-    category?: string;
-    imageUrl?: string;
-  }): Promise<Transaction> {
+  async uploadImage(file: File): Promise<string> {
+      const pin = getStoredAdminPin();
+      const form = new FormData();
+      form.append('file', file);
+
+      const res = await fetch('/api/admin/upload', {
+        method: 'POST',
+        headers: { 'x-admin-pin': pin || '' },
+        body: form,
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Gagal mengunggah gambar');
+      }
+      return data.url as string;
+    },
+
+    async addTransaction(payload: {
+      groupId: string;
+      date: string;
+      description: string;
+      amount: number;
+      category?: string;
+      imageUrl?: string;
+    }): Promise<Transaction> {
     const pin = getStoredAdminPin();
     const res = await fetch('/api/admin/transactions', {
       method: 'POST',

@@ -15,6 +15,7 @@ import {
   ChevronUp,
 } from 'lucide-react';
 import { formatRupiah, getTodayDateString } from '../utils/format.ts';
+import { api } from '../services/api.ts';
 import {
   INCOME_CATEGORIES,
   EXPENSE_CATEGORIES,
@@ -46,6 +47,7 @@ export const TransactionInputForm: React.FC<TransactionInputFormProps> = ({
   const [isNegative, setIsNegative] = useState<boolean>(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [isUploading, setIsUploading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -103,19 +105,40 @@ export const TransactionInputForm: React.FC<TransactionInputFormProps> = ({
         }
 
         canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(img, 0, 0, width, height);
-          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
-          setImagePreview(compressedDataUrl);
-          setError(null);
-        }
-      };
-      img.src = event.target?.result as string;
-    };
-    reader.readAsDataURL(file);
-  };
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) return;
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // Upload the compressed JPEG to the server instead of embedding
+                // a base64 data URL in the database (keeps JSON/DB rows small).
+                canvas.toBlob(
+                  async (blob) => {
+                    if (!blob) {
+                      setError('Gagal memproses gambar.');
+                      return;
+                    }
+                    try {
+                      setIsUploading(true);
+                      const file2 = new File([blob], 'bukti.jpg', { type: 'image/jpeg' });
+                      const url = await api.uploadImage(file2);
+                      setImagePreview(url);
+                      setError(null);
+                    } catch (err: any) {
+                      setError(err?.message || 'Gagal mengunggah gambar.');
+                      setImagePreview(null);
+                    } finally {
+                      setIsUploading(false);
+                    }
+                  },
+                  'image/jpeg',
+                  0.85
+                );
+              };
+              img.src = event.target?.result as string;
+            };
+            reader.readAsDataURL(file);
+          };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
