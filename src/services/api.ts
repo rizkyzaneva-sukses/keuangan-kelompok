@@ -37,7 +37,15 @@ export const api = {
     });
     const data = await res.json();
     if (!res.ok || !data.success) {
-      throw new Error(data.error || 'Password salah atau kelompok tidak ditemukan');
+      // 429 from the rate limiter carries its own human-readable message.
+      let msg = data.error || 'Password salah atau kelompok tidak ditemukan';
+      if (typeof data.remainingAttempts === 'number' && data.remainingAttempts <= 3) {
+        msg +=
+          data.remainingAttempts > 0
+            ? ` Sisa ${data.remainingAttempts} percobaan sebelum dikunci sementara.`
+            : ' Batas percobaan habis, tunggu 15 menit.';
+      }
+      throw new Error(msg);
     }
     return {
       group: data.group,

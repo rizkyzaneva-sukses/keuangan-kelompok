@@ -95,7 +95,9 @@ export const GroupManagementModal: React.FC<GroupManagementModalProps> = ({
   const startEdit = (group: Group) => {
     setEditingGroupId(group.id);
     setName(group.name);
-    setPassword(group.password || '');
+    // Never prefill the password field: the API only ever returns a bcrypt
+    // hash, and echoing that back would re-hash it on save and break the login.
+    setPassword('');
     setShowAddForm(false);
   };
 
@@ -263,15 +265,20 @@ export const GroupManagementModal: React.FC<GroupManagementModalProps> = ({
 
               <div>
                 <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
-                  Password Publik (View Only)
+                  Password Publik Baru (Opsional)
                 </label>
                 <input
                   type="text"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Ganti password jika diperlukan..."
+                  placeholder="Kosongkan jika tidak ingin ganti password"
+                  autoComplete="new-password"
                   className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs sm:text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
+                <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">
+                  Password lama tidak ditampilkan (tersimpan terenkripsi).{' '}
+                  <span className="font-semibold">Biarkan kosong</span> kalau hanya mau ganti nama kelompok.
+                </p>
               </div>
 
               <div className="flex justify-end gap-2 pt-1">

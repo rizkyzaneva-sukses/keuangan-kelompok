@@ -55,20 +55,41 @@ const upload = multer({
 });
 
 // ---------- Rate limiters ----------
+// NOTE: these are keyed per-route-target (not just per-IP) because many members
+// of one group share a single mobile-network IP. A bare per-IP limit locks out
+// everyone as soon as a few people mistype their password.
+const RL_WINDOW_MS = 15 * 60 * 1000;
+
+function limitMessage(retryAfterSec: number) {
+  const mins = Math.max(1, Math.ceil(retryAfterSec / 60));
+  return {
+    success: false,
+    error: `Terlalu banyak percobaan. Coba lagi dalam ${mins} menit.`,
+  };
+}
+
 const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 10,
+  windowMs: RL_WINDOW_MS,
+  max: 15,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { success: false, error: 'Terlalu banyak percobaan. Coba lagi dalam 15 menit.' },
+  skipSuccessfulRequests: true,
+  message: limitMessage(RL_WINDOW_MS / 1000),
 });
 
 const unlockLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 20,
+  windowMs: RL_WINDOW_MS,
+  max: 30,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { success: false, error: 'Terlalu banyak percobaan. Coba lagi dalam 15 menit.' },
+  skipSuccessfulRequests: true,
+  // Bucket per group id so one busy group can't lock out the others.
+  keyGenerator: (req: any) => {
+    const ip = req.ip || req.socket?.remoteAddress || 'unknown';
+    const groupId = req.params?.id || 'none';
+    return `${ip}:${groupId}`;
+  },
+  message: limitMessage(RL_WINDOW_MS / 1000),
 });
 
 // ---------- Helpers ----------
@@ -180,14 +201,21 @@ apiRouter.post(
     const password = typeof req.body?.password === 'string' ? req.body.password : '';
 
     const group = findGroup(id);
-    if (!group) {
-      res.status(404).json({ success: false, error: 'Kelompok tidak ditemukan.' });
-      return;
-    }
-    if (!verifyGroupPassword(id, password)) {
-      res.status(401).json({ success: false, error: 'Password kelompok salah! Silakan coba lagi.' });
-      return;
-    }
+        if (!group) {
+          res.status(404).json({ success: false, error: 'Kelompok tidak ditemukan.' });
+          return;
+        }
+        if (!verifyGroupPassword(id, password)) {
+          // RateLimit-Remaining is added by the limiter (standardHeaders: true).
+          // Surface it so the UI can warn before a lockout happens.
+          const remaining = Number(res.getHeader('RateLimit-Remaining') ?? -1);
+          res.status(401).json({
+            success: false,
+            error: 'Password kelompok salah! Silakan coba lagi.',
+            remainingAttempts: Number.isFinite(remaining) ? remaining : undefined,
+          });
+          return;
+        }
 
     res.json({
       success: true,

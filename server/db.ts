@@ -149,9 +149,13 @@ export function updateGroup(
   if (payload.name && payload.name.trim()) {
     db.prepare('UPDATE groups SET name = ? WHERE id = ?').run(payload.name.trim(), id);
   }
-  if (payload.password && payload.password.trim()) {
+  // Only touch the password when a non-empty value is supplied.
+  // Guard against accidentally re-hashing an already-hashed value
+  // (frontends have previously echoed the bcrypt hash back into the form).
+  const newPassword = payload.password?.trim();
+  if (newPassword && !newPassword.startsWith('$2a$') && !newPassword.startsWith('$2b$')) {
     db.prepare('UPDATE groups SET password = ? WHERE id = ?').run(
-      bcrypt.hashSync(payload.password.trim(), 10),
+      bcrypt.hashSync(newPassword, 10),
       id
     );
   }
